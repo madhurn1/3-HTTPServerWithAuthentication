@@ -76,7 +76,7 @@ def sigint_handler(sig, frame):
 # Register the signal handler
 signal.signal(signal.SIGINT, sigint_handler)
 
-# Parse entity body to retrieve form data
+#parse entity body to retrieve form data
 def parse_form_data(data):
     params = {}
     for pair in data.split('&'):
@@ -85,7 +85,7 @@ def parse_form_data(data):
             params[key] = value
     return params
 
-# Parse the "Cookie" header to extract the token
+#parsese the "Cookie" header to extract the token
 def extract_token(cookie_header):
     cookies = cookie_header.split('; ')
     for cookie in cookies:
@@ -98,14 +98,14 @@ while True:
     client, addr = sock.accept()
     req = client.recv(1024)
 
-    # Split request headers and body
+    # parse request headers and body
     header_body = req.decode().split('\r\n\r\n')
     headers = header_body[0]
     body = '' if len(header_body) == 1 else header_body[1]
     print_value('headers', headers)
     print_value('entity body', body)
 
-    # Parse apart the headers
+    #parse apart the headers
     request_lines = headers.splitlines()
     first_line = request_lines[0] if request_lines else ""
     method, path, _ = first_line.split(" ") if len(first_line.split(" ")) == 3 else (None, None, None)
@@ -118,20 +118,20 @@ while True:
     html_content_to_send = login_page % submit_hostport
     headers_to_send = ''
 
-    # Logout case (E)
+    #logout case (E)
     if method == "POST" and "action=logout" in body:
         if cookie in cookies:
             del cookies[cookie]
         headers_to_send = 'Set-Cookie: token=; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n'
         html_content_to_send = logout_page % submit_hostport
 
-    # Case C: Valid cookie present
+    #cse C: Valid cookie present
     elif cookie and cookie in cookies:
         username = cookies[cookie]
         secret = secrets.get(username, "No secret available.")
         html_content_to_send = (success_page % submit_hostport) + secret
 
-    # Case D: Invalid cookie present
+    # case Dinvalid cookie present
     elif cookie and cookie not in cookies:
         html_content_to_send = bad_creds_page % submit_hostport
 
@@ -141,7 +141,7 @@ while True:
         username = form_data.get("username")
         password = form_data.get("password")
 
-        # Case A: Successful username-password authentication
+        #case A: Successful username-password authentication
         if username in users and users[username] == password:
             secret = secrets.get(username, "No secret available.")
             html_content_to_send = (success_page % submit_hostport) + secret
@@ -149,7 +149,7 @@ while True:
             cookies[rand_val] = username
             headers_to_send = 'Set-Cookie: token=' + rand_val + '\r\n'
 
-        # Case B: Failed authentication
+        # cse B: Failed authentication
         else:
             html_content_to_send = bad_creds_page % submit_hostport
 
