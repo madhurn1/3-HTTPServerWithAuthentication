@@ -85,7 +85,15 @@ def parse_form_data(data):
             params[key] = value
     return params
 
-# Main application logic
+# Parse the "Cookie" header to extract the token
+def extract_token(cookie_header):
+    cookies = cookie_header.split('; ')
+    for cookie in cookies:
+        if cookie.startswith("token="):
+            return cookie.split('=')[1]
+    return None
+
+# Main app logic
 while True:
     client, addr = sock.accept()
     req = client.recv(1024)
@@ -97,16 +105,15 @@ while True:
     print_value('headers', headers)
     print_value('entity body', body)
 
-    # Parse headers
+    # Parse apart the headers
     request_lines = headers.splitlines()
     first_line = request_lines[0] if request_lines else ""
     method, path, _ = first_line.split(" ") if len(first_line.split(" ")) == 3 else (None, None, None)
     cookie = None
     for line in request_lines:
         if line.startswith("Cookie:"):
-            cookie = line.split(": ")[1]
+            cookie = extract_token(line.split(": ")[1])
 
-    # Logic for actions
     submit_hostport = "%s:%d" % (hostname, port)
     html_content_to_send = login_page % submit_hostport
     headers_to_send = ''
@@ -128,7 +135,7 @@ while True:
     elif cookie and cookie not in cookies:
         html_content_to_send = bad_creds_page % submit_hostport
 
-    # Handle POST for username-password authentication
+    # POST for username-password authentication
     elif method == "POST":
         form_data = parse_form_data(body)
         username = form_data.get("username")
